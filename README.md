@@ -11,25 +11,25 @@ handling.
 It proides a high-level abstraction over the following code:
 ```go
 import (
-	grp "github.com/cmd-stream/cmd-stream-go/group"
-	core "github.com/cmd-stream/sender-go"
+  grp "github.com/cmd-stream/cmd-stream-go/group"
+  core "github.com/cmd-stream/sender-go"
 )
 
 var (
-	group grp.ClientGroup = ...
-	results chan core.AsyncResult = ...
+  group grp.ClientGroup = ...
+  results chan core.AsyncResult = ...
 )
 seq, clientID, n, err := group.Send(cmd, results)
 if err != nil {
-	return err
+  return err
 }
 select {
 case <-ctx.Done():
-	group.Forget(seq, clientID)
-	err = ErrTimeout
+  group.Forget(seq, clientID)
+  err = ErrTimeout
 case asyncResult := <-results:
-	result = asyncResult.Result
-	err = asyncResult.Error
+  result = asyncResult.Result
+  err = asyncResult.Error
 }
 ```
 
@@ -44,8 +44,8 @@ result, err := sender.SendWithDeadline(ctx, cmd, deadline)
 
 // Send one Command, receive multiple Results.
 var resultHandler ResultHandlerFn = func(result core.Result, err error) error { 
-	// handle each result here
-	return nil
+  // handle each result here
+  return nil
 }
 err := sender.SendMulti(ctx, cmd, resultsCount, resultHandler) 
 // resultsCount defines the number of expected Results
