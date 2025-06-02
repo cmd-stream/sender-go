@@ -4,7 +4,7 @@
 [![GoReportCard](https://goreportcard.com/badge/cmd-stream/sender-go)](https://goreportcard.com/report/github.com/cmd-stream/sender-go)
 [![codecov](https://codecov.io/gh/cmd-stream/sender-go/graph/badge.svg?token=RXPJ6ZIPK7)](https://codecov.io/gh/cmd-stream/sender-go)
 
-A lightweight Go library for sending commands over a [cmd-stream](https://github.com/cmd-stream/cmd-stream-go) 
+A lightweight Go library for sending commands using a [cmd-stream](https://github.com/cmd-stream/cmd-stream-go) 
 client group, with built-in support for hooks, deadlines, and multi-result 
 handling.
 
