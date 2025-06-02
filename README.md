@@ -55,16 +55,15 @@ err := sender.SendMultiWithDeadline(ctx, cmd, resultsCount, resultHandler)
 ```
 
 More detailed examples can be found at [examples-go](https://github.com/cmd-stream/cmd-stream-examples-go).
+
 For special cases, you can implement your own sender, it’s not hard to do.
 
 ## Hooks
 sender-go also supports hooks, allowing you to customize behavior during the send
 process. Hooks can be used for logging, instrumentation, circuit breaker
-integration, and more.
-
-They are provided through a `HooksFactory`, which creates a fresh `Hooks` 
-instance for each send operation. This ensures isolation and flexibility for 
-each request.
+integration, and more. They are provided through a `HooksFactory`, which creates 
+a fresh `Hooks` instance for each send operation. This ensures isolation and 
+flexibility for each request.
 
 The `hooks` package already includes ready-to-use implementations like
 `CircuitBreakerHooks` and `NoopHooks`.
