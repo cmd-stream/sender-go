@@ -19,7 +19,7 @@ type CircuitBreakerHooksFactory[T any] struct {
 	factory HooksFactory[T]
 }
 
-func (f CircuitBreakerHooksFactory[T]) New() CircuitBreakerHooks[T] {
+func (f CircuitBreakerHooksFactory[T]) New() Hooks[T] {
 	return NewCircuitBreakerHooks(f.cb, f.factory.New())
 }
 
