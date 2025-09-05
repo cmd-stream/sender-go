@@ -2,12 +2,47 @@ package sender
 
 import (
 	"context"
+	"crypto/tls"
+	"errors"
+	"net"
 	"time"
 
+	cmdstream "github.com/cmd-stream/cmd-stream-go"
+	cln "github.com/cmd-stream/cmd-stream-go/client"
 	grp "github.com/cmd-stream/cmd-stream-go/group"
 	"github.com/cmd-stream/core-go"
 	hks "github.com/cmd-stream/sender-go/hooks"
 )
+
+// Make creates a new Sender.
+func Make[T any](addr string, codec cln.Codec[T],
+	ops ...SetMakeOption[T],
+) (sender Sender[T], err error) {
+	var connFactory cln.ConnFactoryFn
+	o := MakeOptions[T]{
+		ClientsCount: 1,
+	}
+	ApplyMakeOptitions(ops, &o)
+
+	if o.TLSConfig == nil {
+		connFactory = func() (net.Conn, error) {
+			return net.Dial("tcp", addr)
+		}
+	} else {
+		connFactory = func() (net.Conn, error) {
+			return tls.Dial("tcp", addr, o.TLSConfig)
+		}
+	}
+	group, err := cmdstream.MakeClientGroup(o.ClientsCount, codec, connFactory,
+		o.Group...,
+	)
+	if err != nil {
+		group.Close()
+		return
+	}
+	sender = New(group, o.Sender...)
+	return
+}
 
 // New creates a new Sender with the given client group and optional hooks.
 func New[T any](group ClientGroup[T], ops ...SetOption[T]) Sender[T] {
@@ -23,15 +58,16 @@ func New[T any](group ClientGroup[T], ops ...SetOption[T]) Sender[T] {
 }
 
 // Sender provides a high-level abstraction over a client group for sending
-// commands to the server.
+// Commands to the server.
 type Sender[T any] struct {
 	group   ClientGroup[T]
 	options Options[T]
 }
 
-// Send sends a command to the server and waits (using the ctx) for the result.
+// Send sends a Command to the server and waits (using the ctx) for the Result.
 func (s Sender[T]) Send(ctx context.Context, cmd core.Cmd[T]) (
-	result core.Result, err error) {
+	result core.Result, err error,
+) {
 	var (
 		results = make(chan core.AsyncResult, 1)
 		hooks   = s.options.HooksFactory.New()
@@ -53,10 +89,11 @@ func (s Sender[T]) Send(ctx context.Context, cmd core.Cmd[T]) (
 	return s.receive(ctx, sentCmd, results, clientID, hooks)
 }
 
-// Send sends a command to the server with the specified deadline and waits
-// (using the ctx) for the result.
+// SendWithDeadline sends a Command to the server with the specified deadline
+// and waits (using the ctx) for the Result.
 func (s Sender[T]) SendWithDeadline(ctx context.Context,
-	cmd core.Cmd[T], dealine time.Time) (result core.Result, err error) {
+	cmd core.Cmd[T], dealine time.Time,
+) (result core.Result, err error) {
 	var (
 		results = make(chan core.AsyncResult, 1)
 		hooks   = s.options.HooksFactory.New()
@@ -78,10 +115,11 @@ func (s Sender[T]) SendWithDeadline(ctx context.Context,
 	return s.receive(ctx, sentCmd, results, clientID, hooks)
 }
 
-// Send sends a command to the server and waits (using the ctx) for multiple
-// results.
+// SendMulti sends a Command to the server and waits (using the ctx) for multiple
+// Results.
 func (s Sender[T]) SendMulti(ctx context.Context, cmd core.Cmd[T],
-	resultsCount int, handler ResultHandler) (err error) {
+	resultsCount int, handler ResultHandler,
+) (err error) {
 	var (
 		results = make(chan core.AsyncResult, resultsCount)
 		hooks   = s.options.HooksFactory.New()
@@ -104,8 +142,8 @@ func (s Sender[T]) SendMulti(ctx context.Context, cmd core.Cmd[T],
 	return
 }
 
-// Send sends a command to the server with the specified deadline and waits
-// (using the ctx) for multiple results.
+// SendMultiWithDeadline sends a Command to the server with the specified
+// deadline and waits (using the ctx) for multiple Results.
 func (s Sender[T]) SendMultiWithDeadline(ctx context.Context,
 	cmd core.Cmd[T],
 	resultsCount int,
@@ -132,6 +170,19 @@ func (s Sender[T]) SendMultiWithDeadline(ctx context.Context,
 	}
 	s.receiveMulti(ctx, sentCmd, results, clientID, hooks, handler)
 	return
+}
+
+func (s Sender[T]) CloseAndWait(timeout time.Duration) (err error) {
+	err = s.Close()
+	if err != nil {
+		return
+	}
+	select {
+	case <-time.NewTimer(timeout).C:
+		return errors.New("timeout exceeded")
+	case <-s.Done():
+		return
+	}
 }
 
 // Close closes the underlying client group.

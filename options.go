@@ -17,10 +17,10 @@ func WithHooksFactory[T any](factory hooks.HooksFactory[T]) SetOption[T] {
 	}
 }
 
-func Apply[T any](ops []SetOption[T], c *Options[T]) {
+func Apply[T any](ops []SetOption[T], o *Options[T]) {
 	for i := range ops {
 		if ops[i] != nil {
-			ops[i](c)
+			ops[i](o)
 		}
 	}
 }
