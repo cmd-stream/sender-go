@@ -17,7 +17,8 @@ func (f NoopHooksFactory[T]) New() Hooks[T] {
 type NoopHooks[T any] struct{}
 
 func (h NoopHooks[T]) BeforeSend(ctx context.Context, cmd core.Cmd[T]) (
-	context.Context, error) {
+	context.Context, error,
+) {
 	return ctx, nil
 }
 

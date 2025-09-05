@@ -8,7 +8,8 @@ import (
 
 // NewCircuitBreakerHooksFactory creates a new CircuitBreakerHooksFactory.
 func NewCircuitBreakerHooksFactory[T any](cb CircuitBreaker,
-	factory HooksFactory[T]) CircuitBreakerHooksFactory[T] {
+	factory HooksFactory[T],
+) CircuitBreakerHooksFactory[T] {
 	return CircuitBreakerHooksFactory[T]{cb, factory}
 }
 
@@ -25,7 +26,8 @@ func (f CircuitBreakerHooksFactory[T]) New() Hooks[T] {
 
 // NewCircuitBreakerHooks creates a new CircuitBreakerHooks.
 func NewCircuitBreakerHooks[T any](cb CircuitBreaker,
-	hooks Hooks[T]) CircuitBreakerHooks[T] {
+	hooks Hooks[T],
+) CircuitBreakerHooks[T] {
 	return CircuitBreakerHooks[T]{cb, hooks}
 }
 
@@ -38,7 +40,8 @@ type CircuitBreakerHooks[T any] struct {
 }
 
 func (h CircuitBreakerHooks[T]) BeforeSend(ctx context.Context, cmd core.Cmd[T]) (
-	context.Context, error) {
+	context.Context, error,
+) {
 	if h.cb.Open() {
 		return ctx, ErrCircuitOpen
 	}
@@ -46,19 +49,22 @@ func (h CircuitBreakerHooks[T]) BeforeSend(ctx context.Context, cmd core.Cmd[T])
 }
 
 func (h CircuitBreakerHooks[T]) OnError(ctx context.Context, sentCmd SentCmd[T],
-	err error) {
+	err error,
+) {
 	h.cb.Fail()
 	h.hooks.OnError(ctx, sentCmd, err)
 }
 
 func (h CircuitBreakerHooks[T]) OnResult(ctx context.Context, sentCmd SentCmd[T],
-	recvResult ReceivedResult, err error) {
+	recvResult ReceivedResult, err error,
+) {
 	h.cb.Success()
 	h.hooks.OnResult(ctx, sentCmd, recvResult, err)
 }
 
 func (h CircuitBreakerHooks[T]) OnTimeout(ctx context.Context, sentCmd SentCmd[T],
-	err error) {
+	err error,
+) {
 	h.cb.Fail()
 	h.hooks.OnTimeout(ctx, sentCmd, err)
 }

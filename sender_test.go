@@ -16,9 +16,7 @@ import (
 )
 
 func TestSender(t *testing.T) {
-
 	t.Run("Send", func(t *testing.T) {
-
 		t.Run("Send should work", func(t *testing.T) {
 			var (
 				want = testdata.Want{
@@ -73,7 +71,8 @@ func TestSender(t *testing.T) {
 					}
 					group = mock.NewClientGroup().RegisterSend(
 						func(cmd core.Cmd[any], results chan<- core.AsyncResult) (seq core.Seq,
-							clientID grp.ClientID, n int, err error) {
+							clientID grp.ClientID, n int, err error,
+						) {
 							seq = want.CmdSeq
 							clientID = want.ClientID
 							n = want.CmdSize
@@ -107,11 +106,9 @@ func TestSender(t *testing.T) {
 			)
 			testdata.TestTimeout(group, want, testdata.Test, t)
 		})
-
 	})
 
 	t.Run("SendWithDeadline", func(t *testing.T) {
-
 		t.Run("Should work", func(t *testing.T) {
 			var (
 				want = testdata.Want{
@@ -174,7 +171,8 @@ func TestSender(t *testing.T) {
 					deadline = time.Now()
 					group    = mock.NewClientGroup().RegisterSendWithDeadline(
 						func(cmd core.Cmd[any], results chan<- core.AsyncResult, deadline time.Time) (seq core.Seq,
-							clientID grp.ClientID, n int, err error) {
+							clientID grp.ClientID, n int, err error,
+						) {
 							seq = want.CmdSeq
 							clientID = want.ClientID
 							n = want.CmdSize
@@ -209,11 +207,9 @@ func TestSender(t *testing.T) {
 			)
 			testdata.TestTimeout(group, want, testdata.Test, t)
 		})
-
 	})
 
 	t.Run("SendMulti", func(t *testing.T) {
-
 		t.Run("Should work", func(t *testing.T) {
 			var (
 				want = testdata.Want{
@@ -290,7 +286,8 @@ func TestSender(t *testing.T) {
 					}
 					group = mock.NewClientGroup().RegisterSend(
 						func(cmd core.Cmd[any], results chan<- core.AsyncResult) (seq core.Seq,
-							clientID grp.ClientID, n int, err error) {
+							clientID grp.ClientID, n int, err error,
+						) {
 							seq = want.CmdSeq
 							clientID = want.ClientID
 							n = want.CmdSize
@@ -360,11 +357,9 @@ func TestSender(t *testing.T) {
 			)
 			testdata.TestMultiTimeout(wantCtx, group, handler, want, testdata.TestMulti, t)
 		})
-
 	})
 
 	t.Run("SendMultiWithDeadline", func(t *testing.T) {
-
 		t.Run("Should work", func(t *testing.T) {
 			var (
 				want = testdata.Want{
@@ -522,7 +517,5 @@ func TestSender(t *testing.T) {
 			)
 			testdata.TestMultiTimeout(wantCtx, group, handler, want, fn, t)
 		})
-
 	})
-
 }

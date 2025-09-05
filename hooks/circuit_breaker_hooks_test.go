@@ -15,9 +15,7 @@ import (
 )
 
 func TestCircuitBreakerHooks(t *testing.T) {
-
 	t.Run("BeforeSend", func(t *testing.T) {
-
 		t.Run("Should work", func(t *testing.T) {
 			var (
 				wantCtx       = context.Background()
@@ -33,7 +31,7 @@ func TestCircuitBreakerHooks(t *testing.T) {
 						return ctx, nil
 					},
 				)
-				hooks = hks.NewCircuitBreakerHooks[any](cb, innerHooks)
+				hooks = hks.NewCircuitBreakerHooks(cb, innerHooks)
 				mocks = []*mok.Mock{cb.Mock, innerHooks.Mock}
 			)
 			ctx, err := hooks.BeforeSend(wantCtx, cmock.NewCmd())
@@ -58,7 +56,6 @@ func TestCircuitBreakerHooks(t *testing.T) {
 
 			asserterror.EqualDeep(mok.CheckCalls(mocks), mok.EmptyInfomap, t)
 		})
-
 	})
 
 	t.Run("OnError", func(t *testing.T) {
@@ -91,7 +88,8 @@ func TestCircuitBreakerHooks(t *testing.T) {
 			cb             = mock.NewCircuitBreaker().RegisterSuccess(func() {})
 			innerHooks     = mock.NewHooks[any]().RegisterOnResult(
 				func(ctx context.Context, sentCmd hks.SentCmd[any],
-					recvResult hks.ReceivedResult, err error) {
+					recvResult hks.ReceivedResult, err error,
+				) {
 					asserterror.Equal(ctx, wantCtx, t)
 					asserterror.EqualDeep(sentCmd, wantSentCmd, t)
 					asserterror.EqualDeep(recvResult, wantRecvResult, t)
@@ -126,5 +124,4 @@ func TestCircuitBreakerHooks(t *testing.T) {
 
 		asserterror.EqualDeep(mok.CheckCalls(mocks), mok.EmptyInfomap, t)
 	})
-
 }
