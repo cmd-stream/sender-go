@@ -1,8 +1,8 @@
 package hooks
 
-// CircuitBreaker defines the interface for the Circuit Breaker pattern.
+// CircuitBreaker defines the interface for the Circuit Breaker Pattern.
 type CircuitBreaker interface {
-	Open() bool
+	Allow() bool
 	Fail()
 	Success()
 }

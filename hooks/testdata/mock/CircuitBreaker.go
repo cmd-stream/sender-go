@@ -4,9 +4,11 @@ import (
 	"github.com/ymz-ncnk/mok"
 )
 
-type OpenFn func() bool
-type FailFn func()
-type SuccessFn func()
+type (
+	AllowFn   func() bool
+	FailFn    func()
+	SuccessFn func()
+)
 
 func NewCircuitBreaker() CircuitBreaker {
 	return CircuitBreaker{
@@ -18,8 +20,8 @@ type CircuitBreaker struct {
 	*mok.Mock
 }
 
-func (c CircuitBreaker) RegisterOpen(fn OpenFn) CircuitBreaker {
-	c.Register("Open", fn)
+func (c CircuitBreaker) RegisterAllow(fn AllowFn) CircuitBreaker {
+	c.Register("Allow", fn)
 	return c
 }
 
@@ -33,8 +35,8 @@ func (c CircuitBreaker) RegisterSuccess(fn SuccessFn) CircuitBreaker {
 	return c
 }
 
-func (c CircuitBreaker) Open() bool {
-	result, err := c.Call("Open")
+func (c CircuitBreaker) Allow() bool {
+	result, err := c.Call("Allow")
 	if err != nil {
 		panic(err)
 	}

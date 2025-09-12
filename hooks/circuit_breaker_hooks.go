@@ -31,9 +31,9 @@ func NewCircuitBreakerHooks[T any](cb CircuitBreaker,
 	return CircuitBreakerHooks[T]{cb, hooks}
 }
 
-// CircuitBreakerHooks checks whether the circuit breaker is open before sending.
-// If so, it returns ErrCircuitOpen, otherwise the corresponding method of the
-// inner Hooks is called.
+// CircuitBreakerHooks checks whether the circuit breaker allows the operation
+// before sending. If not, it returns ErrNotAllowed, otherwise the
+// corresponding method of the inner Hooks is called.
 type CircuitBreakerHooks[T any] struct {
 	cb    CircuitBreaker
 	hooks Hooks[T]
@@ -42,8 +42,8 @@ type CircuitBreakerHooks[T any] struct {
 func (h CircuitBreakerHooks[T]) BeforeSend(ctx context.Context, cmd core.Cmd[T]) (
 	context.Context, error,
 ) {
-	if h.cb.Open() {
-		return ctx, ErrCircuitOpen
+	if !h.cb.Allow() {
+		return ctx, ErrNotAllowed
 	}
 	return h.hooks.BeforeSend(ctx, cmd)
 }

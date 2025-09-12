@@ -21,8 +21,8 @@ func TestCircuitBreakerHooks(t *testing.T) {
 				wantCtx       = context.Background()
 				wantErr error = nil
 				wantCmd       = cmock.NewCmd()
-				cb            = mock.NewCircuitBreaker().RegisterOpen(
-					func() bool { return false },
+				cb            = mock.NewCircuitBreaker().RegisterAllow(
+					func() bool { return true },
 				)
 				innerHooks = mock.NewHooks[any]().RegisterBeforeSend(
 					func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
@@ -44,15 +44,15 @@ func TestCircuitBreakerHooks(t *testing.T) {
 		t.Run("Should return an error if the circuit breaker is open", func(t *testing.T) {
 			var (
 				wantCtx = context.Background()
-				cb      = mock.NewCircuitBreaker().RegisterOpen(
-					func() bool { return true },
+				cb      = mock.NewCircuitBreaker().RegisterAllow(
+					func() bool { return false },
 				)
 				hooks = hks.NewCircuitBreakerHooks[any](cb, nil)
 				mocks = []*mok.Mock{cb.Mock}
 			)
 			ctx, err := hooks.BeforeSend(wantCtx, cmock.NewCmd())
 			asserterror.Equal(ctx, wantCtx, t)
-			asserterror.EqualError(err, hks.ErrCircuitOpen, t)
+			asserterror.EqualError(err, hks.ErrNotAllowed, t)
 
 			asserterror.EqualDeep(mok.CheckCalls(mocks), mok.EmptyInfomap, t)
 		})
