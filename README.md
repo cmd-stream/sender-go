@@ -103,8 +103,8 @@ func main() {
     // HooksFactory: ...
   }
 
-  sender := sndr.Make(cfg.ToOptions()...)
-  _ = sender.Send(ctx, cmd)
+  sender, err := sndr.Make(cfg.ToOptions()...)
+  ...
 }
 ```
 
