@@ -86,25 +86,25 @@ reconnects, and circuit breaker behavior.
 package main
 
 import (
-    "time"
+  "time"
 
-    sndr "github.com/cmd-stream/sender-go"
+  sndr "github.com/cmd-stream/sender-go"
 )
 
 func main() {
-    cfg := sender.ResilientConfig[MyCmd]{
-        KeepaliveTime:               30 * time.Second,
-        KeepaliveIntvl:              10 * time.Second,
-        CircuitBreakerWindowSize:    20,
-        CircuitBreakerFailureRate:   0.5,
-        CircuitBreakerOpenDuration:  30 * time.Second,
-        CircuitBreakerSuccessThreshold: 2,
-        // Optional HooksFactory to observe or modify sender behavior.
-        // HooksFactory: ...
-    }
+  cfg := sender.ResilientConfig[MyCmd]{
+    KeepaliveTime:               30 * time.Second,
+    KeepaliveIntvl:              10 * time.Second,
+    CircuitBreakerWindowSize:    20,
+    CircuitBreakerFailureRate:   0.5,
+    CircuitBreakerOpenDuration:  30 * time.Second,
+    CircuitBreakerSuccessThreshold: 2,
+    // Optional HooksFactory to observe or modify sender behavior.
+    // HooksFactory: ...
+  }
 
-    sender := sndr.Make(cfg.ToOptions()...)
-    _ = sender.Send(ctx, cmd)
+  sender := sndr.Make(cfg.ToOptions()...)
+  _ = sender.Send(ctx, cmd)
 }
 ```
 
