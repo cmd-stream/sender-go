@@ -76,43 +76,45 @@ The `hooks` package already includes ready-to-use implementations like
 
 ## Resilient Configuration
 
-The [ResilientConfig](resilient_config.go) type provides a convenient way to
-construct a **resilient sender** that automatically handles keepalive,
-reconnects, and circuit breaker behavior.
-
-### Example
+To build the sender that automatically handles keepalive, reconnects, and
+circuit breaker behavior:
 
 ```go
-package main
-
 import (
-  "time"
-
+  cln "github.com/cmd-stream/cmd-stream-go/client"
+  grp "github.com/cmd-stream/cmd-stream-go/group"
+  dcln "github.com/cmd-stream/delegate-go/client"
+  hks "github.com/cmd-stream/sender-go/hooks"
   sndr "github.com/cmd-stream/sender-go"
+  "github.com/ymz-ncnk/circbrk-go"
 )
 
 func main() {
-  cfg := sender.ResilientConfig[MyCmd]{
-    KeepaliveTime:               30 * time.Second,
-    KeepaliveIntvl:              10 * time.Second,
-    CircuitBreakerWindowSize:    20,
-    CircuitBreakerFailureRate:   0.5,
-    CircuitBreakerOpenDuration:  30 * time.Second,
-    CircuitBreakerSuccessThreshold: 2,
-    // Optional HooksFactory to observe or modify sender behavior.
-    // HooksFactory: ...
-  }
-
-  sender, err := sndr.Make(cfg.ToOptions()...)
-  ...
+  var (
+    addr = ...
+    codec = ...
+    cb = circbrk.New(circbrk.WithWindowSize(...),
+      circbrk.WithFailureRate(...),
+      circbrk.WithOpenDuration(...),
+      circbrk.WithSuccessThreshold(...),
+    )
+    hooksFactory = hks.NewCircuitBreakerHooksFactory(cb,
+      hks.NoopHooksFactory[...]{},
+    )
+  )
+  sender, err :=  sndr.Make(addr, codec,
+    sndr.WithGroup(
+      grp.WithReconnect[...](),
+      grp.WithClient[...](
+        cln.WithKeepalive(
+          dcln.WithKeepaliveTime(...),
+          dcln.WithKeepaliveIntvl(...),
+        ),
+      ),
+    ),
+    sndr.WithSender(
+      sndr.WithHooksFactory(hooksFactory),
+    ),
+  )
 }
 ```
-
-### Behavior
-
-- `ResilientConfig` panics if any required field is unset (zero).
-- If no `HooksFactory` is provided, a `NoopHooksFactory` is used automatically.
-- The generated options include:
-  - automatic reconnects (`grp.WithReconnect`);
-  - keepalive management (`cln.WithKeepalive`)
-  - circuit breaker hooks factory (`WithHooksFactory`).
