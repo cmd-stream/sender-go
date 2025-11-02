@@ -1,13 +1,13 @@
-package testdata
+package sender_test
 
 import (
 	grp "github.com/cmd-stream/cmd-stream-go/group"
 	"github.com/cmd-stream/core-go"
-	cmock "github.com/cmd-stream/core-go/testdata/mock"
+	cmocks "github.com/cmd-stream/testkit-go/mocks/core"
 )
 
 type Want struct {
-	Cmd     cmock.Cmd
+	Cmd     cmocks.Cmd
 	Results []WantResult
 
 	CmdSeq     core.Seq

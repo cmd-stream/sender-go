@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/cmd-stream/core-go"
-	cmock "github.com/cmd-stream/core-go/testdata/mock"
 	hks "github.com/cmd-stream/sender-go/hooks"
+	cmocks "github.com/cmd-stream/testkit-go/mocks/core"
 	asserterror "github.com/ymz-ncnk/assert/error"
 	"github.com/ymz-ncnk/mok"
 
@@ -20,7 +20,7 @@ func TestCircuitBreakerHooks(t *testing.T) {
 			var (
 				wantCtx       = context.Background()
 				wantErr error = nil
-				wantCmd       = cmock.NewCmd()
+				wantCmd       = cmocks.NewCmd()
 				cb            = mock.NewCircuitBreaker().RegisterAllow(
 					func() bool { return true },
 				)
@@ -34,7 +34,7 @@ func TestCircuitBreakerHooks(t *testing.T) {
 				hooks = hks.NewCircuitBreakerHooks(cb, innerHooks)
 				mocks = []*mok.Mock{cb.Mock, innerHooks.Mock}
 			)
-			ctx, err := hooks.BeforeSend(wantCtx, cmock.NewCmd())
+			ctx, err := hooks.BeforeSend(wantCtx, cmocks.NewCmd())
 			asserterror.Equal(ctx, wantCtx, t)
 			asserterror.EqualError(err, wantErr, t)
 
@@ -50,7 +50,7 @@ func TestCircuitBreakerHooks(t *testing.T) {
 				hooks = hks.NewCircuitBreakerHooks[any](cb, nil)
 				mocks = []*mok.Mock{cb.Mock}
 			)
-			ctx, err := hooks.BeforeSend(wantCtx, cmock.NewCmd())
+			ctx, err := hooks.BeforeSend(wantCtx, cmocks.NewCmd())
 			asserterror.Equal(ctx, wantCtx, t)
 			asserterror.EqualError(err, hks.ErrNotAllowed, t)
 

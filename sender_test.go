@@ -8,10 +8,9 @@ import (
 
 	grp "github.com/cmd-stream/cmd-stream-go/group"
 	"github.com/cmd-stream/core-go"
-	cmock "github.com/cmd-stream/core-go/testdata/mock"
 	sndr "github.com/cmd-stream/sender-go"
-	"github.com/cmd-stream/sender-go/testdata"
 	"github.com/cmd-stream/sender-go/testdata/mock"
+	cmocks "github.com/cmd-stream/testkit-go/mocks/core"
 	asserterror "github.com/ymz-ncnk/assert/error"
 )
 
@@ -19,13 +18,13 @@ func TestSender(t *testing.T) {
 	t.Run("Send", func(t *testing.T) {
 		t.Run("Send should work", func(t *testing.T) {
 			var (
-				want = testdata.Want{
-					Cmd: cmock.NewCmd(),
-					Results: []testdata.WantResult{
+				want = Want{
+					Cmd: cmocks.NewCmd(),
+					Results: []WantResult{
 						{
 							Seq:       core.Seq(1),
 							BytesRead: 20,
-							Result:    cmock.NewResult(),
+							Result:    cmocks.NewResult(),
 							Err:       nil,
 						},
 					},
@@ -50,18 +49,18 @@ func TestSender(t *testing.T) {
 					},
 				)
 			)
-			testdata.TestShouldWork(group, want, testdata.Test, t)
+			testShouldWork(group, want, test, t)
 		})
 
 		t.Run("If hooks.BeforeSend fails with an error, Send should return it", func(t *testing.T) {
-			testdata.TestFailedHooksBeforeSend(testdata.Test, t)
+			testFailedHooksBeforeSend(test, t)
 		})
 
 		t.Run("If ClientGroup.Send fails with an error, Send should return it",
 			func(t *testing.T) {
 				var (
-					want = testdata.Want{
-						Cmd: cmock.NewCmd(),
+					want = Want{
+						Cmd: cmocks.NewCmd(),
 
 						CmdSeq:   core.Seq(1),
 						ClientID: 1,
@@ -81,13 +80,13 @@ func TestSender(t *testing.T) {
 						},
 					)
 				)
-				testdata.TestFailedSend(group, want, testdata.Test, t)
+				testFailedSend(group, want, test, t)
 			})
 
 		t.Run("Should be able to timeout", func(t *testing.T) {
 			var (
-				want = testdata.Want{
-					Cmd: cmock.NewCmd(),
+				want = Want{
+					Cmd: cmocks.NewCmd(),
 
 					CmdSeq:   core.Seq(1),
 					ClientID: grp.ClientID(1),
@@ -104,20 +103,20 @@ func TestSender(t *testing.T) {
 					},
 				)
 			)
-			testdata.TestTimeout(group, want, testdata.Test, t)
+			testTimeout(group, want, test, t)
 		})
 	})
 
 	t.Run("SendWithDeadline", func(t *testing.T) {
 		t.Run("Should work", func(t *testing.T) {
 			var (
-				want = testdata.Want{
-					Cmd: cmock.NewCmd(),
-					Results: []testdata.WantResult{
+				want = Want{
+					Cmd: cmocks.NewCmd(),
+					Results: []WantResult{
 						{
 							Seq:       core.Seq(1),
 							BytesRead: 20,
-							Result:    cmock.NewResult(),
+							Result:    cmocks.NewResult(),
 							Err:       nil,
 						},
 					},
@@ -143,24 +142,24 @@ func TestSender(t *testing.T) {
 						return want.CmdSeq, want.ClientID, want.CmdSize, want.CmdSendErr
 					},
 				)
-				fn = testdata.WrapTestDeadline(wantDeadline)
+				fn = wrapTestDeadline(wantDeadline)
 			)
-			testdata.TestShouldWork(group, want, fn, t)
+			testShouldWork(group, want, fn, t)
 		})
 
 		t.Run("If hooks.BeforeSend fails with an error, Send should return it", func(t *testing.T) {
 			var (
 				wantDeadline = time.Now()
-				fn           = testdata.WrapTestDeadline(wantDeadline)
+				fn           = wrapTestDeadline(wantDeadline)
 			)
-			testdata.TestFailedHooksBeforeSend(fn, t)
+			testFailedHooksBeforeSend(fn, t)
 		})
 
 		t.Run("If ClientGroup.Send fails with an error, SendWithDeadline should return it",
 			func(t *testing.T) {
 				var (
-					want = testdata.Want{
-						Cmd: cmock.NewCmd(),
+					want = Want{
+						Cmd: cmocks.NewCmd(),
 
 						CmdSeq:   core.Seq(1),
 						ClientID: 1,
@@ -180,15 +179,15 @@ func TestSender(t *testing.T) {
 							return
 						},
 					)
-					fn = testdata.WrapTestDeadline(deadline)
+					fn = wrapTestDeadline(deadline)
 				)
-				testdata.TestFailedSend(group, want, fn, t)
+				testFailedSend(group, want, fn, t)
 			})
 
 		t.Run("Should be able to timeout", func(t *testing.T) {
 			var (
-				want = testdata.Want{
-					Cmd: cmock.NewCmd(),
+				want = Want{
+					Cmd: cmocks.NewCmd(),
 
 					CmdSeq:   core.Seq(1),
 					ClientID: grp.ClientID(1),
@@ -205,19 +204,19 @@ func TestSender(t *testing.T) {
 					},
 				)
 			)
-			testdata.TestTimeout(group, want, testdata.Test, t)
+			testTimeout(group, want, test, t)
 		})
 	})
 
 	t.Run("SendMulti", func(t *testing.T) {
 		t.Run("Should work", func(t *testing.T) {
 			var (
-				want = testdata.Want{
-					Cmd: cmock.NewCmd(),
-					Results: []testdata.WantResult{
+				want = Want{
+					Cmd: cmocks.NewCmd(),
+					Results: []WantResult{
 						{
 							Seq: core.Seq(1),
-							Result: cmock.NewResult().RegisterLastOne(
+							Result: cmocks.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return false },
 							),
 							BytesRead: 10,
@@ -225,7 +224,7 @@ func TestSender(t *testing.T) {
 						},
 						{
 							Seq: core.Seq(2),
-							Result: cmock.NewResult().RegisterLastOne(
+							Result: cmocks.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return true },
 							),
 							BytesRead: 20,
@@ -265,18 +264,18 @@ func TestSender(t *testing.T) {
 					},
 				)
 			}
-			testdata.TestMultiShouldWork(group, handler, want, testdata.TestMulti, t)
+			testMultiShouldWork(group, handler, want, testMulti, t)
 		})
 
 		t.Run("If hooks.BeforeSend fails with an error, Send should return it", func(t *testing.T) {
-			testdata.TestMultiFailedHooksBeforeSend(testdata.TestMulti, t)
+			testMultiFailedHooksBeforeSend(testMulti, t)
 		})
 
 		t.Run("If ClientGroup.Send fails with an error, SendMulti should return it",
 			func(t *testing.T) {
 				var (
-					want = testdata.Want{
-						Cmd: cmock.NewCmd(),
+					want = Want{
+						Cmd: cmocks.NewCmd(),
 
 						CmdSeq:   core.Seq(1),
 						ClientID: 1,
@@ -296,18 +295,18 @@ func TestSender(t *testing.T) {
 						},
 					)
 				)
-				testdata.TestMultiFailedSend(group, want, testdata.TestMulti, t)
+				testMultiFailedSend(group, want, testMulti, t)
 			})
 
 		t.Run("Should be able to timeout", func(t *testing.T) {
 			var (
 				wantCtx, cancel = context.WithCancel(context.Background())
-				want            = testdata.Want{
-					Cmd: cmock.NewCmd(),
-					Results: []testdata.WantResult{
+				want            = Want{
+					Cmd: cmocks.NewCmd(),
+					Results: []WantResult{
 						{
 							Seq: core.Seq(1),
-							Result: cmock.NewResult().RegisterLastOne(
+							Result: cmocks.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return false },
 							),
 							BytesRead: 10,
@@ -355,19 +354,19 @@ func TestSender(t *testing.T) {
 					return nil
 				},
 			)
-			testdata.TestMultiTimeout(wantCtx, group, handler, want, testdata.TestMulti, t)
+			testMultiTimeout(wantCtx, group, handler, want, testMulti, t)
 		})
 	})
 
 	t.Run("SendMultiWithDeadline", func(t *testing.T) {
 		t.Run("Should work", func(t *testing.T) {
 			var (
-				want = testdata.Want{
-					Cmd: cmock.NewCmd(),
-					Results: []testdata.WantResult{
+				want = Want{
+					Cmd: cmocks.NewCmd(),
+					Results: []WantResult{
 						{
 							Seq: core.Seq(1),
-							Result: cmock.NewResult().RegisterLastOne(
+							Result: cmocks.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return false },
 							),
 							BytesRead: 10,
@@ -375,7 +374,7 @@ func TestSender(t *testing.T) {
 						},
 						{
 							Seq: core.Seq(2),
-							Result: cmock.NewResult().RegisterLastOne(
+							Result: cmocks.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return true },
 							),
 							BytesRead: 20,
@@ -407,7 +406,7 @@ func TestSender(t *testing.T) {
 					},
 				)
 				handler = mock.NewResultHandler()
-				fn      = testdata.WrapTestMultiDeadline(wantDeadline)
+				fn      = wrapTestMultiDeadline(wantDeadline)
 			)
 			for i := range want.Results {
 				handler.RegisterHandle(
@@ -418,22 +417,22 @@ func TestSender(t *testing.T) {
 					},
 				)
 			}
-			testdata.TestMultiShouldWork(group, handler, want, fn, t)
+			testMultiShouldWork(group, handler, want, fn, t)
 		})
 
 		t.Run("If hooks.BeforeSend fails with an error, Send should return it", func(t *testing.T) {
 			var (
 				wantDeadline = time.Now()
-				fn           = testdata.WrapTestMultiDeadline(wantDeadline)
+				fn           = wrapTestMultiDeadline(wantDeadline)
 			)
-			testdata.TestMultiFailedHooksBeforeSend(fn, t)
+			testMultiFailedHooksBeforeSend(fn, t)
 		})
 
 		t.Run("If ClientGroup.Send fails with an error, SendMultiWithDeadline should return it",
 			func(t *testing.T) {
 				var (
-					want = testdata.Want{
-						Cmd: cmock.NewCmd(),
+					want = Want{
+						Cmd: cmocks.NewCmd(),
 
 						CmdSeq:   core.Seq(1),
 						ClientID: 1,
@@ -451,20 +450,20 @@ func TestSender(t *testing.T) {
 							return
 						},
 					)
-					fn = testdata.WrapTestMultiDeadline(wantDeadline)
+					fn = wrapTestMultiDeadline(wantDeadline)
 				)
-				testdata.TestMultiFailedSend(group, want, fn, t)
+				testMultiFailedSend(group, want, fn, t)
 			})
 
 		t.Run("Should be able to timeout", func(t *testing.T) {
 			var (
 				wantCtx, cancel = context.WithCancel(context.Background())
-				want            = testdata.Want{
-					Cmd: cmock.NewCmd(),
-					Results: []testdata.WantResult{
+				want            = Want{
+					Cmd: cmocks.NewCmd(),
+					Results: []WantResult{
 						{
 							Seq: core.Seq(1),
-							Result: cmock.NewResult().RegisterLastOne(
+							Result: cmocks.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return false },
 							),
 							BytesRead: 10,
@@ -496,7 +495,7 @@ func TestSender(t *testing.T) {
 				)
 
 				handler = mock.NewResultHandler()
-				fn      = testdata.WrapTestMultiDeadline(wantDeadline)
+				fn      = wrapTestMultiDeadline(wantDeadline)
 			)
 			defer cancel()
 			for i := range want.Results {
@@ -515,7 +514,7 @@ func TestSender(t *testing.T) {
 					return nil
 				},
 			)
-			testdata.TestMultiTimeout(wantCtx, group, handler, want, fn, t)
+			testMultiTimeout(wantCtx, group, handler, want, fn, t)
 		})
 	})
 }

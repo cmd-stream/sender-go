@@ -1,4 +1,4 @@
-package testdata
+package sender_test
 
 import (
 	"context"
@@ -8,10 +8,10 @@ import (
 
 	grp "github.com/cmd-stream/cmd-stream-go/group"
 	"github.com/cmd-stream/core-go"
-	cmock "github.com/cmd-stream/core-go/testdata/mock"
 	hks "github.com/cmd-stream/sender-go/hooks"
 	hmock "github.com/cmd-stream/sender-go/hooks/testdata/mock"
 	"github.com/cmd-stream/sender-go/testdata/mock"
+	cmocks "github.com/cmd-stream/testkit-go/mocks/core"
 
 	sndr "github.com/cmd-stream/sender-go"
 	"github.com/ymz-ncnk/mok"
@@ -19,15 +19,15 @@ import (
 	asserterror "github.com/ymz-ncnk/assert/error"
 )
 
-type TestFn func(hooks hmock.Hooks[any], factory hmock.HooksFactory[any],
+type testFn func(hooks hmock.Hooks[any], factory hmock.HooksFactory[any],
 	group mock.ClientGroup,
-	cmd cmock.Cmd,
+	cmd cmocks.Cmd,
 	wantResult core.Result,
 	wantErr error,
 	t *testing.T,
 )
 
-func TestShouldWork(group mock.ClientGroup, w Want, fn TestFn, t *testing.T) {
+func testShouldWork(group mock.ClientGroup, w Want, fn testFn, t *testing.T) {
 	var (
 		hooks = hmock.NewHooks[any]().RegisterBeforeSend(
 			func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
@@ -38,7 +38,8 @@ func TestShouldWork(group mock.ClientGroup, w Want, fn TestFn, t *testing.T) {
 			},
 		).RegisterOnResult(
 			func(ctx context.Context, sentCmd hks.SentCmd[any],
-				recvResult hks.ReceivedResult, err error) {
+				recvResult hks.ReceivedResult, err error,
+			) {
 				asserterror.EqualDeep(sentCmd, hks.SentCmd[any]{
 					Seq:  w.CmdSeq,
 					Size: w.CmdSize,
@@ -61,7 +62,7 @@ func TestShouldWork(group mock.ClientGroup, w Want, fn TestFn, t *testing.T) {
 	fn(hooks, factory, group, w.Cmd, w.Results[0].Result, w.Err, t)
 }
 
-func TestFailedHooksBeforeSend(fn TestFn, t *testing.T) {
+func testFailedHooksBeforeSend(fn testFn, t *testing.T) {
 	var (
 		wantResult core.Result = nil
 		wantErr                = errors.New("HooksFactory.BeforeSend error")
@@ -77,10 +78,10 @@ func TestFailedHooksBeforeSend(fn TestFn, t *testing.T) {
 			},
 		)
 	)
-	fn(hooks, factory, mock.NewClientGroup(), cmock.NewCmd(), wantResult, wantErr, t)
+	fn(hooks, factory, mock.NewClientGroup(), cmocks.NewCmd(), wantResult, wantErr, t)
 }
 
-func TestTimeout(group mock.ClientGroup, w Want, fn TestFn, t *testing.T) {
+func testTimeout(group mock.ClientGroup, w Want, fn testFn, t *testing.T) {
 	var (
 		wantCtx, cancel = context.WithCancel(context.Background())
 		hooks           = hmock.NewHooks[any]().RegisterBeforeSend(
@@ -114,7 +115,7 @@ func TestTimeout(group mock.ClientGroup, w Want, fn TestFn, t *testing.T) {
 	fn(hooks, factory, group, w.Cmd, nil, w.Err, t)
 }
 
-func TestFailedSend(group mock.ClientGroup, w Want, fn TestFn, t *testing.T) {
+func testFailedSend(group mock.ClientGroup, w Want, fn testFn, t *testing.T) {
 	var (
 		wantCtx = context.WithoutCancel(context.Background())
 		hooks   = hmock.NewHooks[any]().RegisterBeforeSend(
@@ -136,15 +137,15 @@ func TestFailedSend(group mock.ClientGroup, w Want, fn TestFn, t *testing.T) {
 	fn(hooks, factory, group, w.Cmd, nil, w.Err, t)
 }
 
-func Test(hooks hmock.Hooks[any], factory hmock.HooksFactory[any],
+func test(hooks hmock.Hooks[any], factory hmock.HooksFactory[any],
 	group mock.ClientGroup,
-	cmd cmock.Cmd,
+	cmd cmocks.Cmd,
 	Result core.Result,
 	wantErr error,
 	t *testing.T,
 ) {
 	var (
-		sender = sndr.New[any](group, sndr.WithHooksFactory(factory))
+		sender = sndr.New(group, sndr.WithHooksFactory(factory))
 		mocks  = []*mok.Mock{hooks.Mock, factory.Mock, group.Mock, cmd.Mock}
 	)
 	result, err := sender.Send(context.Background(), cmd)
@@ -154,25 +155,26 @@ func Test(hooks hmock.Hooks[any], factory hmock.HooksFactory[any],
 	asserterror.EqualDeep(mok.CheckCalls(mocks), mok.EmptyInfomap, t)
 }
 
-func WrapTestDeadline(deadline time.Time) TestFn {
+func wrapTestDeadline(deadline time.Time) testFn {
 	return func(hooks hmock.Hooks[any], factory hmock.HooksFactory[any],
 		group mock.ClientGroup,
-		cmd cmock.Cmd,
+		cmd cmocks.Cmd,
 		Result core.Result,
 		wantErr error,
 		t *testing.T,
 	) {
-		TestDeadline(hooks, factory, group, deadline, cmd, Result, wantErr, t)
+		testDeadline(hooks, factory, group, deadline, cmd, Result, wantErr, t)
 	}
 }
 
-func TestDeadline(hooks hmock.Hooks[any], factory hmock.HooksFactory[any],
+func testDeadline(hooks hmock.Hooks[any], factory hmock.HooksFactory[any],
 	group mock.ClientGroup,
 	deadline time.Time,
-	cmd cmock.Cmd,
+	cmd cmocks.Cmd,
 	Result core.Result,
 	wantErr error,
-	t *testing.T) {
+	t *testing.T,
+) {
 	var (
 		sender = sndr.New(group, sndr.WithHooksFactory(factory))
 		mocks  = []*mok.Mock{hooks.Mock, factory.Mock, group.Mock, cmd.Mock}
