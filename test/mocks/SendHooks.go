@@ -1,4 +1,4 @@
-package mock
+package mocks
 
 import (
 	"context"
@@ -8,10 +8,12 @@ import (
 	"github.com/ymz-ncnk/mok"
 )
 
-type BeforeSendFn[T any] func(ctx context.Context, cmd core.Cmd[T]) (context.Context, error)
-type OnErrorFn[T any] func(ctx context.Context, sentCmd hooks.SentCmd[T], err error)
-type OnResultFn[T any] func(ctx context.Context, sentCmd hooks.SentCmd[T],
-	recvResult hooks.ReceivedResult, err error)
+type (
+	BeforeSendFn[T any] func(ctx context.Context, cmd core.Cmd[T]) (context.Context, error)
+	OnErrorFn[T any]    func(ctx context.Context, sentCmd hooks.SentCmd[T], err error)
+	OnResultFn[T any]   func(ctx context.Context, sentCmd hooks.SentCmd[T],
+		recvResult hooks.ReceivedResult, err error)
+)
 type OnTimeoutFn[T any] func(ctx context.Context, sentCmd hooks.SentCmd[T], err error)
 
 func NewHooks[T any]() *Hooks[T] {
@@ -45,7 +47,8 @@ func (h Hooks[T]) RegisterOnTimeout(fn OnTimeoutFn[T]) Hooks[T] {
 }
 
 func (h Hooks[T]) BeforeSend(ctx context.Context, cmd core.Cmd[T]) (
-	actx context.Context, err error) {
+	actx context.Context, err error,
+) {
 	result, err := h.Call("BeforeSend", ctx, mok.SafeVal[core.Cmd[T]](cmd))
 	if err != nil {
 		panic(err)
@@ -57,7 +60,8 @@ func (h Hooks[T]) BeforeSend(ctx context.Context, cmd core.Cmd[T]) (
 }
 
 func (h Hooks[T]) OnError(ctx context.Context, sentCmd hooks.SentCmd[T],
-	err error) {
+	err error,
+) {
 	_, err = h.Call("OnError", ctx, sentCmd, err)
 	if err != nil {
 		panic(err)
@@ -65,7 +69,8 @@ func (h Hooks[T]) OnError(ctx context.Context, sentCmd hooks.SentCmd[T],
 }
 
 func (h Hooks[T]) OnResult(ctx context.Context, sentCmd hooks.SentCmd[T],
-	recvResult hooks.ReceivedResult, err error) {
+	recvResult hooks.ReceivedResult, err error,
+) {
 	_, err = h.Call("OnResult", ctx, sentCmd, recvResult, mok.SafeVal[error](err))
 	if err != nil {
 		panic(err)
@@ -73,7 +78,8 @@ func (h Hooks[T]) OnResult(ctx context.Context, sentCmd hooks.SentCmd[T],
 }
 
 func (h Hooks[T]) OnTimeout(ctx context.Context, sentCmd hooks.SentCmd[T],
-	err error) {
+	err error,
+) {
 	_, err = h.Call("OnTimeout", ctx, sentCmd, err)
 	if err != nil {
 		panic(err)

@@ -1,4 +1,4 @@
-package mock
+package mocks
 
 import (
 	grp "github.com/cmd-stream/cmd-stream-go/group"
@@ -23,7 +23,8 @@ func (f DispatchStrategyFactory[T]) RegisterNew(fn NewFn[T]) DispatchStrategyFac
 }
 
 func (f DispatchStrategyFactory[T]) New(clients []grp.Client[T]) (
-	strategy grp.DispatchStrategy[grp.Client[T]]) {
+	strategy grp.DispatchStrategy[grp.Client[T]],
+) {
 	result, err := f.Call("Read", clients)
 	if err != nil {
 		panic(err)

@@ -1,4 +1,4 @@
-package mock
+package mocks
 
 import (
 	"time"
@@ -10,14 +10,18 @@ import (
 
 type SendFn func(cmd core.Cmd[any], results chan<- core.AsyncResult) (
 	seq core.Seq, clientID grp.ClientID, n int, err error)
+
 type SendWithDeadlineFn func(cmd core.Cmd[any], results chan<- core.AsyncResult,
 	deadline time.Time,
 ) (seq core.Seq, clientID grp.ClientID, n int, err error)
-type HasFn func(seq core.Seq, clientID grp.ClientID) (ok bool)
-type ForgetFn func(seq core.Seq, clientID grp.ClientID)
-type DoneFn func() <-chan struct{}
-type ErrFn func() error
-type CloseFn func() error
+
+type (
+	HasFn    func(seq core.Seq, clientID grp.ClientID) (ok bool)
+	ForgetFn func(seq core.Seq, clientID grp.ClientID)
+	DoneFn   func() <-chan struct{}
+	ErrFn    func() error
+	CloseFn  func() error
+)
 
 func NewClientGroup() ClientGroup {
 	return ClientGroup{

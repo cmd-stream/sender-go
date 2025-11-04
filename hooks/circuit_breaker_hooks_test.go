@@ -11,7 +11,7 @@ import (
 	asserterror "github.com/ymz-ncnk/assert/error"
 	"github.com/ymz-ncnk/mok"
 
-	"github.com/cmd-stream/sender-go/hooks/testdata/mock"
+	"github.com/cmd-stream/sender-go/test/mocks"
 )
 
 func TestCircuitBreakerHooks(t *testing.T) {
@@ -21,10 +21,10 @@ func TestCircuitBreakerHooks(t *testing.T) {
 				wantCtx       = context.Background()
 				wantErr error = nil
 				wantCmd       = cmocks.NewCmd()
-				cb            = mock.NewCircuitBreaker().RegisterAllow(
+				cb            = mocks.NewCircuitBreaker().RegisterAllow(
 					func() bool { return true },
 				)
-				innerHooks = mock.NewHooks[any]().RegisterBeforeSend(
+				innerHooks = mocks.NewHooks[any]().RegisterBeforeSend(
 					func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
 						asserterror.Equal(ctx, wantCtx, t)
 						asserterror.EqualDeep(cmd, wantCmd, t)
@@ -44,7 +44,7 @@ func TestCircuitBreakerHooks(t *testing.T) {
 		t.Run("Should return an error if the circuit breaker is open", func(t *testing.T) {
 			var (
 				wantCtx = context.Background()
-				cb      = mock.NewCircuitBreaker().RegisterAllow(
+				cb      = mocks.NewCircuitBreaker().RegisterAllow(
 					func() bool { return false },
 				)
 				hooks = hks.NewCircuitBreakerHooks[any](cb, nil)
@@ -63,8 +63,8 @@ func TestCircuitBreakerHooks(t *testing.T) {
 			wantCtx     = context.Background()
 			wantSentCmd = hks.SentCmd[any]{}
 			wantErr     = errors.New("error")
-			cb          = mock.NewCircuitBreaker().RegisterFail(func() {})
-			innerHooks  = mock.NewHooks[any]().RegisterOnError(
+			cb          = mocks.NewCircuitBreaker().RegisterFail(func() {})
+			innerHooks  = mocks.NewHooks[any]().RegisterOnError(
 				func(ctx context.Context, sentCmd hks.SentCmd[any], err error) {
 					asserterror.Equal(ctx, wantCtx, t)
 					asserterror.EqualDeep(sentCmd, wantSentCmd, t)
@@ -85,8 +85,8 @@ func TestCircuitBreakerHooks(t *testing.T) {
 			wantSentCmd    = hks.SentCmd[any]{}
 			wantRecvResult = hks.ReceivedResult{}
 			wantErr        = errors.New("error")
-			cb             = mock.NewCircuitBreaker().RegisterSuccess(func() {})
-			innerHooks     = mock.NewHooks[any]().RegisterOnResult(
+			cb             = mocks.NewCircuitBreaker().RegisterSuccess(func() {})
+			innerHooks     = mocks.NewHooks[any]().RegisterOnResult(
 				func(ctx context.Context, sentCmd hks.SentCmd[any],
 					recvResult hks.ReceivedResult, err error,
 				) {
@@ -109,8 +109,8 @@ func TestCircuitBreakerHooks(t *testing.T) {
 			wantCtx     = context.Background()
 			wantSentCmd = hks.SentCmd[any]{}
 			wantErr     = errors.New("error")
-			cb          = mock.NewCircuitBreaker().RegisterFail(func() {})
-			innerHooks  = mock.NewHooks[any]().RegisterOnTimeout(
+			cb          = mocks.NewCircuitBreaker().RegisterFail(func() {})
+			innerHooks  = mocks.NewHooks[any]().RegisterOnTimeout(
 				func(ctx context.Context, sentCmd hks.SentCmd[any], err error) {
 					asserterror.Equal(ctx, wantCtx, t)
 					asserterror.EqualDeep(sentCmd, wantSentCmd, t)

@@ -1,4 +1,4 @@
-package sender_test
+package helpers
 
 import (
 	"context"
@@ -10,27 +10,26 @@ import (
 	"github.com/cmd-stream/core-go"
 	sndr "github.com/cmd-stream/sender-go"
 	hks "github.com/cmd-stream/sender-go/hooks"
-	hmocks "github.com/cmd-stream/sender-go/hooks/testdata/mock"
-	"github.com/cmd-stream/sender-go/testdata/mock"
+	"github.com/cmd-stream/sender-go/test/mocks"
 	cmocks "github.com/cmd-stream/testkit-go/mocks/core"
 	asserterror "github.com/ymz-ncnk/assert/error"
 	"github.com/ymz-ncnk/mok"
 )
 
-type testMultiFn func(hooks hmocks.Hooks[any], factory hmocks.HooksFactory[any],
-	group mock.ClientGroup,
+type TestMultiFn func(hooks mocks.Hooks[any], factory mocks.HooksFactory[any],
+	group mocks.ClientGroup,
 	cmd cmocks.Cmd,
 	resultsCount int,
-	handler mock.ResultHandler,
+	handler mocks.ResultHandler,
 	wantErr error,
 	t *testing.T,
 )
 
-func testMultiShouldWork(group mock.ClientGroup, handler mock.ResultHandler,
-	w Want, fn testMultiFn, t *testing.T,
+func TestMultiShouldWork(group mocks.ClientGroup, handler mocks.ResultHandler,
+	w Want, fn TestMultiFn, t *testing.T,
 ) {
 	var (
-		hooks = hmocks.NewHooks[any]().RegisterBeforeSend(
+		hooks = mocks.NewHooks[any]().RegisterBeforeSend(
 			func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
 				asserterror.EqualDeep(cmd, w.Cmd, t)
 
@@ -38,7 +37,7 @@ func testMultiShouldWork(group mock.ClientGroup, handler mock.ResultHandler,
 				return actx, nil
 			},
 		)
-		factory = hmocks.NewHooksFactory[any]().RegisterNew(
+		factory = mocks.NewHooksFactory[any]().RegisterNew(
 			func() hks.Hooks[any] {
 				return hooks
 			},
@@ -66,38 +65,40 @@ func testMultiShouldWork(group mock.ClientGroup, handler mock.ResultHandler,
 	fn(hooks, factory, group, w.Cmd, len(w.Results), handler, w.Err, t)
 }
 
-func testMultiFailedHooksBeforeSend(fn testMultiFn, t *testing.T) {
+func TestMultiFailedHooksBeforeSend(fn TestMultiFn, t *testing.T) {
 	var (
 		wantErr = errors.New("HooksFactory.BeforeSend error")
 
-		hooks = hmocks.NewHooks[any]().RegisterBeforeSend(
+		hooks = mocks.NewHooks[any]().RegisterBeforeSend(
 			func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
 				return nil, wantErr
 			},
 		)
-		factory = hmocks.NewHooksFactory[any]().RegisterNew(
+		factory = mocks.NewHooksFactory[any]().RegisterNew(
 			func() hks.Hooks[any] {
 				return hooks
 			},
 		)
 	)
-	fn(hooks, factory, mock.NewClientGroup(), cmocks.NewCmd(), 0,
-		mock.NewResultHandler(), wantErr, t)
+	fn(hooks, factory, mocks.NewClientGroup(), cmocks.NewCmd(), 0,
+		mocks.NewResultHandler(), wantErr, t)
 }
 
-func testMultiTimeout(wantCtx context.Context, group mock.ClientGroup,
-	handler mock.ResultHandler,
+func TestMultiTimeout(wantCtx context.Context, group mocks.ClientGroup,
+	handler mocks.ResultHandler,
 	w Want,
-	fn testMultiFn,
+	fn TestMultiFn,
 	t *testing.T,
 ) {
 	var (
-		hooks = hmocks.NewHooks[any]().RegisterBeforeSend(
+		hooks = mocks.NewHooks[any]().RegisterBeforeSend(
 			func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
 				return wantCtx, nil
 			},
 		).RegisterOnResult(
-			func(ctx context.Context, sentCmd hks.SentCmd[any], recvResult hks.ReceivedResult, err error) {
+			func(ctx context.Context, sentCmd hks.SentCmd[any],
+				recvResult hks.ReceivedResult, err error,
+			) {
 				// nothing to do
 			},
 		).RegisterOnTimeout(
@@ -111,7 +112,7 @@ func testMultiTimeout(wantCtx context.Context, group mock.ClientGroup,
 				asserterror.EqualError(err, sndr.ErrTimeout, t)
 			},
 		)
-		factory = hmocks.NewHooksFactory[any]().RegisterNew(
+		factory = mocks.NewHooksFactory[any]().RegisterNew(
 			func() hks.Hooks[any] {
 				return hooks
 			},
@@ -126,10 +127,10 @@ func testMultiTimeout(wantCtx context.Context, group mock.ClientGroup,
 	fn(hooks, factory, group, w.Cmd, len(w.Results), handler, w.Err, t)
 }
 
-func testMultiFailedSend(group mock.ClientGroup, w Want, fn testMultiFn, t *testing.T) {
+func TestMultiFailedSend(group mocks.ClientGroup, w Want, fn TestMultiFn, t *testing.T) {
 	var (
 		wantCtx = context.WithoutCancel(context.Background())
-		hooks   = hmocks.NewHooks[any]().RegisterBeforeSend(
+		hooks   = mocks.NewHooks[any]().RegisterBeforeSend(
 			func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
 				return wantCtx, nil
 			},
@@ -139,20 +140,20 @@ func testMultiFailedSend(group mock.ClientGroup, w Want, fn testMultiFn, t *test
 				asserterror.EqualError(err, w.Err, t)
 			},
 		)
-		factory = hmocks.NewHooksFactory[any]().RegisterNew(
+		factory = mocks.NewHooksFactory[any]().RegisterNew(
 			func() hks.Hooks[any] {
 				return hooks
 			},
 		)
 	)
-	fn(hooks, factory, group, w.Cmd, 0, mock.NewResultHandler(), w.Err, t)
+	fn(hooks, factory, group, w.Cmd, 0, mocks.NewResultHandler(), w.Err, t)
 }
 
-func testMulti(hooks hmocks.Hooks[any], factory hmocks.HooksFactory[any],
-	group mock.ClientGroup,
+func TestMulti(hooks mocks.Hooks[any], factory mocks.HooksFactory[any],
+	group mocks.ClientGroup,
 	cmd cmocks.Cmd,
 	resultsCount int,
-	handler mock.ResultHandler,
+	handler mocks.ResultHandler,
 	wantErr error,
 	t *testing.T,
 ) {
@@ -166,26 +167,26 @@ func testMulti(hooks hmocks.Hooks[any], factory hmocks.HooksFactory[any],
 	asserterror.EqualDeep(mok.CheckCalls(mocks), mok.EmptyInfomap, t)
 }
 
-func wrapTestMultiDeadline(deadline time.Time) testMultiFn {
-	return func(hooks hmocks.Hooks[any], factory hmocks.HooksFactory[any],
-		group mock.ClientGroup,
+func WrapTestMultiDeadline(deadline time.Time) TestMultiFn {
+	return func(hooks mocks.Hooks[any], factory mocks.HooksFactory[any],
+		group mocks.ClientGroup,
 		cmd cmocks.Cmd,
 		resultsCount int,
-		handler mock.ResultHandler,
+		handler mocks.ResultHandler,
 		wantErr error,
 		t *testing.T,
 	) {
-		testMultiDeadline(hooks, factory, group, deadline, cmd, resultsCount,
+		TestMultiDeadline(hooks, factory, group, deadline, cmd, resultsCount,
 			handler, wantErr, t)
 	}
 }
 
-func testMultiDeadline(hooks hmocks.Hooks[any], factory hmocks.HooksFactory[any],
-	group mock.ClientGroup,
+func TestMultiDeadline(hooks mocks.Hooks[any], factory mocks.HooksFactory[any],
+	group mocks.ClientGroup,
 	deadline time.Time,
 	cmd cmocks.Cmd,
 	resultsCount int,
-	handler mock.ResultHandler,
+	handler mocks.ResultHandler,
 	wantErr error,
 	t *testing.T,
 ) {

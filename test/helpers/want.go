@@ -1,4 +1,4 @@
-package sender_test
+package helpers
 
 import (
 	grp "github.com/cmd-stream/cmd-stream-go/group"
