@@ -35,7 +35,7 @@ func WithClientsCount[T any](count int) SetMakeOption[T] {
 	return func(o *MakeOptions[T]) { o.ClientsCount = count }
 }
 
-func ApplyMakeOptitions[T any](ops []SetMakeOption[T], o *MakeOptions[T]) {
+func ApplyMake[T any](ops []SetMakeOption[T], o *MakeOptions[T]) {
 	for i := range ops {
 		if ops[i] != nil {
 			ops[i](o)

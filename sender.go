@@ -22,7 +22,7 @@ func Make[T any](addr string, codec cln.Codec[T],
 	o := MakeOptions[T]{
 		ClientsCount: 1,
 	}
-	ApplyMakeOptitions(ops, &o)
+	ApplyMake(ops, &o)
 
 	if o.TLSConfig == nil {
 		connFactory = func() (net.Conn, error) {

@@ -3,11 +3,11 @@ package helpers
 import (
 	grp "github.com/cmd-stream/cmd-stream-go/group"
 	"github.com/cmd-stream/core-go"
-	cmocks "github.com/cmd-stream/testkit-go/mocks/core"
+	cmock "github.com/cmd-stream/core-go/test/mock"
 )
 
 type Want struct {
-	Cmd     cmocks.Cmd
+	Cmd     cmock.Cmd
 	Results []WantResult
 
 	CmdSeq     core.Seq

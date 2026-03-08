@@ -8,24 +8,24 @@ import (
 
 	grp "github.com/cmd-stream/cmd-stream-go/group"
 	"github.com/cmd-stream/core-go"
+	cmock "github.com/cmd-stream/core-go/test/mock"
 	sndr "github.com/cmd-stream/sender-go"
 	"github.com/cmd-stream/sender-go/test/helpers"
-	"github.com/cmd-stream/sender-go/test/mocks"
-	cmocks "github.com/cmd-stream/testkit-go/mocks/core"
+	mock "github.com/cmd-stream/sender-go/test/mock"
 	asserterror "github.com/ymz-ncnk/assert/error"
 )
 
 func TestSender(t *testing.T) {
 	t.Run("Send", func(t *testing.T) {
-		t.Run("Send should work", func(t *testing.T) {
+		t.Run("Should succeed", func(t *testing.T) {
 			var (
 				want = helpers.Want{
-					Cmd: cmocks.NewCmd(),
+					Cmd: cmock.NewCmd(),
 					Results: []helpers.WantResult{
 						{
 							Seq:       core.Seq(1),
 							BytesRead: 20,
-							Result:    cmocks.NewResult(),
+							Result:    cmock.NewResult(),
 							Err:       nil,
 						},
 					},
@@ -37,11 +37,11 @@ func TestSender(t *testing.T) {
 
 					Err: nil,
 				}
-				group = mocks.NewClientGroup().RegisterSend(
+				group = mock.NewClientGroup().RegisterSend(
 					func(cmd core.Cmd[any], results chan<- core.AsyncResult) (
 						seq core.Seq, clientID grp.ClientID, n int, err error,
 					) {
-						asserterror.EqualDeep(cmd, want.Cmd, t)
+						asserterror.EqualDeep(t, cmd, want.Cmd)
 						results <- core.AsyncResult{
 							Seq:       want.Results[0].Seq,
 							BytesRead: want.Results[0].BytesRead,
@@ -52,7 +52,7 @@ func TestSender(t *testing.T) {
 					},
 				)
 			)
-			helpers.TestShouldWork(group, want, helpers.Test, t)
+			helpers.TestSuccess(group, want, helpers.Test, t)
 		})
 
 		t.Run("If hooks.BeforeSend fails with an error, Send should return it", func(t *testing.T) {
@@ -63,7 +63,7 @@ func TestSender(t *testing.T) {
 			func(t *testing.T) {
 				var (
 					want = helpers.Want{
-						Cmd: cmocks.NewCmd(),
+						Cmd: cmock.NewCmd(),
 
 						CmdSeq:   core.Seq(1),
 						ClientID: 1,
@@ -71,7 +71,7 @@ func TestSender(t *testing.T) {
 
 						Err: errors.New("ClientGroup.Send error"),
 					}
-					group = mocks.NewClientGroup().RegisterSend(
+					group = mock.NewClientGroup().RegisterSend(
 						func(cmd core.Cmd[any], results chan<- core.AsyncResult) (seq core.Seq,
 							clientID grp.ClientID, n int, err error,
 						) {
@@ -89,7 +89,7 @@ func TestSender(t *testing.T) {
 		t.Run("Should be able to timeout", func(t *testing.T) {
 			var (
 				want = helpers.Want{
-					Cmd: cmocks.NewCmd(),
+					Cmd: cmock.NewCmd(),
 
 					CmdSeq:   core.Seq(1),
 					ClientID: grp.ClientID(1),
@@ -97,7 +97,7 @@ func TestSender(t *testing.T) {
 
 					Err: sndr.ErrTimeout,
 				}
-				group = mocks.NewClientGroup().RegisterSend(
+				group = mock.NewClientGroup().RegisterSend(
 					func(cmd core.Cmd[any], results chan<- core.AsyncResult) (
 						seq core.Seq, clientID grp.ClientID, n int, err error,
 					) {
@@ -113,15 +113,15 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("SendWithDeadline", func(t *testing.T) {
-		t.Run("Should work", func(t *testing.T) {
+		t.Run("Should succeed", func(t *testing.T) {
 			var (
 				want = helpers.Want{
-					Cmd: cmocks.NewCmd(),
+					Cmd: cmock.NewCmd(),
 					Results: []helpers.WantResult{
 						{
 							Seq:       core.Seq(1),
 							BytesRead: 20,
-							Result:    cmocks.NewResult(),
+							Result:    cmock.NewResult(),
 							Err:       nil,
 						},
 					},
@@ -134,12 +134,12 @@ func TestSender(t *testing.T) {
 					Err: nil,
 				}
 				wantDeadline = time.Now()
-				group        = mocks.NewClientGroup().RegisterSendWithDeadline(
+				group        = mock.NewClientGroup().RegisterSendWithDeadline(
 					func(cmd core.Cmd[any], results chan<- core.AsyncResult,
 						deadline time.Time,
 					) (seq core.Seq, clientID grp.ClientID, n int, err error) {
-						asserterror.EqualDeep(cmd, want.Cmd, t)
-						asserterror.Equal(deadline, wantDeadline, t)
+						asserterror.EqualDeep(t, cmd, want.Cmd)
+						asserterror.Equal(t, deadline, wantDeadline)
 						results <- core.AsyncResult{
 							Seq:       want.Results[0].Seq,
 							BytesRead: want.Results[0].BytesRead,
@@ -151,7 +151,7 @@ func TestSender(t *testing.T) {
 				)
 				fn = helpers.WrapTestDeadline(wantDeadline)
 			)
-			helpers.TestShouldWork(group, want, fn, t)
+			helpers.TestSuccess(group, want, fn, t)
 		})
 
 		t.Run("If hooks.BeforeSend fails with an error, Send should return it", func(t *testing.T) {
@@ -166,7 +166,7 @@ func TestSender(t *testing.T) {
 			func(t *testing.T) {
 				var (
 					want = helpers.Want{
-						Cmd: cmocks.NewCmd(),
+						Cmd: cmock.NewCmd(),
 
 						CmdSeq:   core.Seq(1),
 						ClientID: 1,
@@ -175,7 +175,7 @@ func TestSender(t *testing.T) {
 						Err: errors.New("ClientGroup.Send error"),
 					}
 					deadline = time.Now()
-					group    = mocks.NewClientGroup().RegisterSendWithDeadline(
+					group    = mock.NewClientGroup().RegisterSendWithDeadline(
 						func(cmd core.Cmd[any], results chan<- core.AsyncResult, deadline time.Time) (seq core.Seq,
 							clientID grp.ClientID, n int, err error,
 						) {
@@ -194,7 +194,7 @@ func TestSender(t *testing.T) {
 		t.Run("Should be able to timeout", func(t *testing.T) {
 			var (
 				want = helpers.Want{
-					Cmd: cmocks.NewCmd(),
+					Cmd: cmock.NewCmd(),
 
 					CmdSeq:   core.Seq(1),
 					ClientID: grp.ClientID(1),
@@ -202,7 +202,7 @@ func TestSender(t *testing.T) {
 
 					Err: sndr.ErrTimeout,
 				}
-				group = mocks.NewClientGroup().RegisterSend(
+				group = mock.NewClientGroup().RegisterSend(
 					func(cmd core.Cmd[any], results chan<- core.AsyncResult) (
 						seq core.Seq, clientID grp.ClientID, n int, err error,
 					) {
@@ -218,14 +218,14 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("SendMulti", func(t *testing.T) {
-		t.Run("Should work", func(t *testing.T) {
+		t.Run("Should succeed", func(t *testing.T) {
 			var (
 				want = helpers.Want{
-					Cmd: cmocks.NewCmd(),
+					Cmd: cmock.NewCmd(),
 					Results: []helpers.WantResult{
 						{
 							Seq: core.Seq(1),
-							Result: cmocks.NewResult().RegisterLastOne(
+							Result: cmock.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return false },
 							),
 							BytesRead: 10,
@@ -233,7 +233,7 @@ func TestSender(t *testing.T) {
 						},
 						{
 							Seq: core.Seq(2),
-							Result: cmocks.NewResult().RegisterLastOne(
+							Result: cmock.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return true },
 							),
 							BytesRead: 20,
@@ -248,11 +248,11 @@ func TestSender(t *testing.T) {
 
 					Err: nil,
 				}
-				group = mocks.NewClientGroup().RegisterSend(
+				group = mock.NewClientGroup().RegisterSend(
 					func(cmd core.Cmd[any], results chan<- core.AsyncResult) (
 						seq core.Seq, clientID grp.ClientID, n int, err error,
 					) {
-						asserterror.EqualDeep(cmd, want.Cmd, t)
+						asserterror.EqualDeep(t, cmd, want.Cmd)
 						for i := range want.Results {
 							results <- core.AsyncResult{
 								Seq:       want.Results[i].Seq,
@@ -264,18 +264,18 @@ func TestSender(t *testing.T) {
 						return want.CmdSeq, want.ClientID, want.CmdSize, want.CmdSendErr
 					},
 				)
-				handler = mocks.NewResultHandler()
+				handler = mock.NewResultHandler()
 			)
 			for i := range want.Results {
 				handler.RegisterHandle(
 					func(result core.Result, err error) error {
-						asserterror.EqualDeep(result, want.Results[i].Result, t)
-						asserterror.EqualError(err, want.Results[i].Err, t)
+						asserterror.EqualDeep(t, result, want.Results[i].Result)
+						asserterror.EqualError(t, err, want.Results[i].Err)
 						return nil
 					},
 				)
 			}
-			helpers.TestMultiShouldWork(group, handler, want, helpers.TestMulti, t)
+			helpers.TestMultiSuccess(group, handler, want, helpers.TestMulti, t)
 		})
 
 		t.Run("If hooks.BeforeSend fails with an error, Send should return it", func(t *testing.T) {
@@ -286,7 +286,7 @@ func TestSender(t *testing.T) {
 			func(t *testing.T) {
 				var (
 					want = helpers.Want{
-						Cmd: cmocks.NewCmd(),
+						Cmd: cmock.NewCmd(),
 
 						CmdSeq:   core.Seq(1),
 						ClientID: 1,
@@ -294,7 +294,7 @@ func TestSender(t *testing.T) {
 
 						Err: errors.New("ClientGroup.Send error"),
 					}
-					group = mocks.NewClientGroup().RegisterSend(
+					group = mock.NewClientGroup().RegisterSend(
 						func(cmd core.Cmd[any], results chan<- core.AsyncResult) (seq core.Seq,
 							clientID grp.ClientID, n int, err error,
 						) {
@@ -313,11 +313,11 @@ func TestSender(t *testing.T) {
 			var (
 				wantCtx, cancel = context.WithCancel(context.Background())
 				want            = helpers.Want{
-					Cmd: cmocks.NewCmd(),
+					Cmd: cmock.NewCmd(),
 					Results: []helpers.WantResult{
 						{
 							Seq: core.Seq(1),
-							Result: cmocks.NewResult().RegisterLastOne(
+							Result: cmock.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return false },
 							),
 							BytesRead: 10,
@@ -332,11 +332,11 @@ func TestSender(t *testing.T) {
 
 					Err: nil,
 				}
-				group = mocks.NewClientGroup().RegisterSend(
+				group = mock.NewClientGroup().RegisterSend(
 					func(cmd core.Cmd[any], results chan<- core.AsyncResult) (
 						seq core.Seq, clientID grp.ClientID, n int, err error,
 					) {
-						asserterror.EqualDeep(cmd, want.Cmd, t)
+						asserterror.EqualDeep(t, cmd, want.Cmd)
 						for i := range want.Results {
 							results <- core.AsyncResult{
 								Seq:       want.Results[i].Seq,
@@ -348,14 +348,14 @@ func TestSender(t *testing.T) {
 						return want.CmdSeq, want.ClientID, want.CmdSize, want.CmdSendErr
 					},
 				)
-				handler = mocks.NewResultHandler()
+				handler = mock.NewResultHandler()
 			)
 			defer cancel()
 			for i := range want.Results {
 				handler.RegisterHandle(
 					func(result core.Result, err error) error {
-						asserterror.EqualDeep(result, want.Results[i].Result, t)
-						asserterror.EqualError(err, want.Results[i].Err, t)
+						asserterror.EqualDeep(t, result, want.Results[i].Result)
+						asserterror.EqualError(t, err, want.Results[i].Err)
 						cancel()
 						return nil
 					},
@@ -363,7 +363,7 @@ func TestSender(t *testing.T) {
 			}
 			handler.RegisterHandle(
 				func(result core.Result, err error) error {
-					asserterror.EqualError(err, sndr.ErrTimeout, t)
+					asserterror.EqualError(t, err, sndr.ErrTimeout)
 					return nil
 				},
 			)
@@ -372,14 +372,14 @@ func TestSender(t *testing.T) {
 	})
 
 	t.Run("SendMultiWithDeadline", func(t *testing.T) {
-		t.Run("Should work", func(t *testing.T) {
+		t.Run("Should succeed", func(t *testing.T) {
 			var (
 				want = helpers.Want{
-					Cmd: cmocks.NewCmd(),
+					Cmd: cmock.NewCmd(),
 					Results: []helpers.WantResult{
 						{
 							Seq: core.Seq(1),
-							Result: cmocks.NewResult().RegisterLastOne(
+							Result: cmock.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return false },
 							),
 							BytesRead: 10,
@@ -387,7 +387,7 @@ func TestSender(t *testing.T) {
 						},
 						{
 							Seq: core.Seq(2),
-							Result: cmocks.NewResult().RegisterLastOne(
+							Result: cmock.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return true },
 							),
 							BytesRead: 20,
@@ -403,12 +403,12 @@ func TestSender(t *testing.T) {
 					Err: nil,
 				}
 				wantDeadline = time.Now()
-				group        = mocks.NewClientGroup().RegisterSendWithDeadline(
+				group        = mock.NewClientGroup().RegisterSendWithDeadline(
 					func(cmd core.Cmd[any], results chan<- core.AsyncResult,
 						deadline time.Time,
 					) (seq core.Seq, clientID grp.ClientID, n int, err error) {
-						asserterror.EqualDeep(cmd, want.Cmd, t)
-						asserterror.Equal(deadline, wantDeadline, t)
+						asserterror.EqualDeep(t, cmd, want.Cmd)
+						asserterror.Equal(t, deadline, wantDeadline)
 						for i := range want.Results {
 							results <- core.AsyncResult{
 								Seq:       want.Results[i].Seq,
@@ -420,19 +420,19 @@ func TestSender(t *testing.T) {
 						return want.CmdSeq, want.ClientID, want.CmdSize, want.CmdSendErr
 					},
 				)
-				handler = mocks.NewResultHandler()
+				handler = mock.NewResultHandler()
 				fn      = helpers.WrapTestMultiDeadline(wantDeadline)
 			)
 			for i := range want.Results {
 				handler.RegisterHandle(
 					func(result core.Result, err error) error {
-						asserterror.EqualDeep(result, want.Results[i].Result, t)
-						asserterror.EqualError(err, want.Results[i].Err, t)
+						asserterror.EqualDeep(t, result, want.Results[i].Result)
+						asserterror.EqualError(t, err, want.Results[i].Err)
 						return nil
 					},
 				)
 			}
-			helpers.TestMultiShouldWork(group, handler, want, fn, t)
+			helpers.TestMultiSuccess(group, handler, want, fn, t)
 		})
 
 		t.Run("If hooks.BeforeSend fails with an error, Send should return it", func(t *testing.T) {
@@ -447,7 +447,7 @@ func TestSender(t *testing.T) {
 			func(t *testing.T) {
 				var (
 					want = helpers.Want{
-						Cmd: cmocks.NewCmd(),
+						Cmd: cmock.NewCmd(),
 
 						CmdSeq:   core.Seq(1),
 						ClientID: 1,
@@ -456,7 +456,7 @@ func TestSender(t *testing.T) {
 						Err: errors.New("ClientGroup.Send error"),
 					}
 					wantDeadline = time.Now()
-					group        = mocks.NewClientGroup().RegisterSendWithDeadline(
+					group        = mock.NewClientGroup().RegisterSendWithDeadline(
 						func(cmd core.Cmd[any], results chan<- core.AsyncResult,
 							deadline time.Time,
 						) (seq core.Seq, clientID grp.ClientID, n int, err error) {
@@ -476,11 +476,11 @@ func TestSender(t *testing.T) {
 			var (
 				wantCtx, cancel = context.WithCancel(context.Background())
 				want            = helpers.Want{
-					Cmd: cmocks.NewCmd(),
+					Cmd: cmock.NewCmd(),
 					Results: []helpers.WantResult{
 						{
 							Seq: core.Seq(1),
-							Result: cmocks.NewResult().RegisterLastOne(
+							Result: cmock.NewResult().RegisterLastOne(
 								func() (lastOne bool) { return false },
 							),
 							BytesRead: 10,
@@ -496,11 +496,11 @@ func TestSender(t *testing.T) {
 					Err: nil,
 				}
 				wantDeadline = time.Now()
-				group        = mocks.NewClientGroup().RegisterSendWithDeadline(
+				group        = mock.NewClientGroup().RegisterSendWithDeadline(
 					func(cmd core.Cmd[any], results chan<- core.AsyncResult,
 						deadline time.Time,
 					) (seq core.Seq, clientID grp.ClientID, n int, err error) {
-						asserterror.EqualDeep(cmd, want.Cmd, t)
+						asserterror.EqualDeep(t, cmd, want.Cmd)
 						for i := range want.Results {
 							results <- core.AsyncResult{
 								Seq:       want.Results[i].Seq,
@@ -513,15 +513,15 @@ func TestSender(t *testing.T) {
 					},
 				)
 
-				handler = mocks.NewResultHandler()
+				handler = mock.NewResultHandler()
 				fn      = helpers.WrapTestMultiDeadline(wantDeadline)
 			)
 			defer cancel()
 			for i := range want.Results {
 				handler.RegisterHandle(
 					func(result core.Result, err error) error {
-						asserterror.EqualDeep(result, want.Results[i].Result, t)
-						asserterror.EqualError(err, want.Results[i].Err, t)
+						asserterror.EqualDeep(t, result, want.Results[i].Result)
+						asserterror.EqualError(t, err, want.Results[i].Err)
 						cancel()
 						return nil
 					},
@@ -529,7 +529,7 @@ func TestSender(t *testing.T) {
 			}
 			handler.RegisterHandle(
 				func(result core.Result, err error) error {
-					asserterror.EqualError(err, sndr.ErrTimeout, t)
+					asserterror.EqualError(t, err, sndr.ErrTimeout)
 					return nil
 				},
 			)

@@ -8,9 +8,9 @@ import (
 
 	grp "github.com/cmd-stream/cmd-stream-go/group"
 	"github.com/cmd-stream/core-go"
+	cmock "github.com/cmd-stream/core-go/test/mock"
 	hks "github.com/cmd-stream/sender-go/hooks"
-	"github.com/cmd-stream/sender-go/test/mocks"
-	cmocks "github.com/cmd-stream/testkit-go/mocks/core"
+	mock "github.com/cmd-stream/sender-go/test/mock"
 
 	sndr "github.com/cmd-stream/sender-go"
 	"github.com/ymz-ncnk/mok"
@@ -18,19 +18,19 @@ import (
 	asserterror "github.com/ymz-ncnk/assert/error"
 )
 
-type TestFn func(hooks mocks.Hooks[any], factory mocks.HooksFactory[any],
-	group mocks.ClientGroup,
-	cmd cmocks.Cmd,
+type TestFn func(hooks mock.Hooks[any], factory mock.HooksFactory[any],
+	group mock.ClientGroup,
+	cmd cmock.Cmd,
 	wantResult core.Result,
 	wantErr error,
 	t *testing.T,
 )
 
-func TestShouldWork(group mocks.ClientGroup, w Want, fn TestFn, t *testing.T) {
+func TestSuccess(group mock.ClientGroup, w Want, fn TestFn, t *testing.T) {
 	var (
-		hooks = mocks.NewHooks[any]().RegisterBeforeSend(
+		hooks = mock.NewHooks[any]().RegisterBeforeSend(
 			func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
-				asserterror.EqualDeep(cmd, w.Cmd, t)
+				asserterror.EqualDeep(t, cmd, w.Cmd)
 
 				actx := context.WithoutCancel(ctx)
 				return actx, nil
@@ -39,20 +39,20 @@ func TestShouldWork(group mocks.ClientGroup, w Want, fn TestFn, t *testing.T) {
 			func(ctx context.Context, sentCmd hks.SentCmd[any],
 				recvResult hks.ReceivedResult, err error,
 			) {
-				asserterror.EqualDeep(sentCmd, hks.SentCmd[any]{
+				asserterror.EqualDeep(t, sentCmd, hks.SentCmd[any]{
 					Seq:  w.CmdSeq,
 					Size: w.CmdSize,
 					Cmd:  w.Cmd,
-				}, t)
-				asserterror.EqualDeep(recvResult, hks.ReceivedResult{
+				})
+				asserterror.EqualDeep(t, recvResult, hks.ReceivedResult{
 					Seq:    w.Results[0].Seq,
 					Size:   w.Results[0].BytesRead,
 					Result: w.Results[0].Result,
-				}, t)
-				asserterror.EqualError(err, w.Results[0].Err, t)
+				})
+				asserterror.EqualError(t, err, w.Results[0].Err)
 			},
 		)
-		factory = mocks.NewHooksFactory[any]().RegisterNew(
+		factory = mock.NewHooksFactory[any]().RegisterNew(
 			func() hks.Hooks[any] {
 				return hooks
 			},
@@ -66,39 +66,39 @@ func TestFailedHooksBeforeSend(fn TestFn, t *testing.T) {
 		wantResult core.Result = nil
 		wantErr                = errors.New("HooksFactory.BeforeSend error")
 
-		hooks = mocks.NewHooks[any]().RegisterBeforeSend(
+		hooks = mock.NewHooks[any]().RegisterBeforeSend(
 			func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
 				return nil, wantErr
 			},
 		)
-		factory = mocks.NewHooksFactory[any]().RegisterNew(
+		factory = mock.NewHooksFactory[any]().RegisterNew(
 			func() hks.Hooks[any] {
 				return hooks
 			},
 		)
 	)
-	fn(hooks, factory, mocks.NewClientGroup(), cmocks.NewCmd(), wantResult, wantErr, t)
+	fn(hooks, factory, mock.NewClientGroup(), cmock.NewCmd(), wantResult, wantErr, t)
 }
 
-func TestTimeout(group mocks.ClientGroup, w Want, fn TestFn, t *testing.T) {
+func TestTimeout(group mock.ClientGroup, w Want, fn TestFn, t *testing.T) {
 	var (
 		wantCtx, cancel = context.WithCancel(context.Background())
-		hooks           = mocks.NewHooks[any]().RegisterBeforeSend(
+		hooks           = mock.NewHooks[any]().RegisterBeforeSend(
 			func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
 				return wantCtx, nil
 			},
 		).RegisterOnTimeout(
 			func(ctx context.Context, sentCmd hks.SentCmd[any], err error) {
-				asserterror.Equal(ctx, wantCtx, t)
-				asserterror.EqualDeep(sentCmd, hks.SentCmd[any]{
+				asserterror.Equal(t, ctx, wantCtx)
+				asserterror.EqualDeep(t, sentCmd, hks.SentCmd[any]{
 					Seq:  w.CmdSeq,
 					Size: w.CmdSize,
 					Cmd:  w.Cmd,
-				}, t)
-				asserterror.EqualError(err, w.Err, t)
+				})
+				asserterror.EqualError(t, err, w.Err)
 			},
 		)
-		factory = mocks.NewHooksFactory[any]().RegisterNew(
+		factory = mock.NewHooksFactory[any]().RegisterNew(
 			func() hks.Hooks[any] {
 				return hooks
 			},
@@ -106,28 +106,28 @@ func TestTimeout(group mocks.ClientGroup, w Want, fn TestFn, t *testing.T) {
 	)
 	group.RegisterForget(
 		func(seq core.Seq, clientID grp.ClientID) {
-			asserterror.Equal(seq, w.CmdSeq, t)
-			asserterror.Equal(clientID, w.ClientID, t)
+			asserterror.Equal(t, seq, w.CmdSeq)
+			asserterror.Equal(t, clientID, w.ClientID)
 		},
 	)
 	cancel()
 	fn(hooks, factory, group, w.Cmd, nil, w.Err, t)
 }
 
-func TestFailedSend(group mocks.ClientGroup, w Want, fn TestFn, t *testing.T) {
+func TestFailedSend(group mock.ClientGroup, w Want, fn TestFn, t *testing.T) {
 	var (
 		wantCtx = context.WithoutCancel(context.Background())
-		hooks   = mocks.NewHooks[any]().RegisterBeforeSend(
+		hooks   = mock.NewHooks[any]().RegisterBeforeSend(
 			func(ctx context.Context, cmd core.Cmd[any]) (context.Context, error) {
 				return wantCtx, nil
 			},
 		).RegisterOnError(
 			func(ctx context.Context, sentCmd hks.SentCmd[any], err error) {
-				asserterror.Equal(ctx, wantCtx, t)
-				asserterror.EqualError(err, w.Err, t)
+				asserterror.Equal(t, ctx, wantCtx)
+				asserterror.EqualError(t, err, w.Err)
 			},
 		)
-		factory = mocks.NewHooksFactory[any]().RegisterNew(
+		factory = mock.NewHooksFactory[any]().RegisterNew(
 			func() hks.Hooks[any] {
 				return hooks
 			},
@@ -136,9 +136,9 @@ func TestFailedSend(group mocks.ClientGroup, w Want, fn TestFn, t *testing.T) {
 	fn(hooks, factory, group, w.Cmd, nil, w.Err, t)
 }
 
-func Test(hooks mocks.Hooks[any], factory mocks.HooksFactory[any],
-	group mocks.ClientGroup,
-	cmd cmocks.Cmd,
+func Test(hooks mock.Hooks[any], factory mock.HooksFactory[any],
+	group mock.ClientGroup,
+	cmd cmock.Cmd,
 	Result core.Result,
 	wantErr error,
 	t *testing.T,
@@ -148,16 +148,16 @@ func Test(hooks mocks.Hooks[any], factory mocks.HooksFactory[any],
 		mocks  = []*mok.Mock{hooks.Mock, factory.Mock, group.Mock, cmd.Mock}
 	)
 	result, err := sender.Send(context.Background(), cmd)
-	asserterror.EqualError(err, wantErr, t)
-	asserterror.EqualDeep(result, Result, t)
+	asserterror.EqualError(t, err, wantErr)
+	asserterror.EqualDeep(t, result, Result)
 
-	asserterror.EqualDeep(mok.CheckCalls(mocks), mok.EmptyInfomap, t)
+	asserterror.EqualDeep(t, mok.CheckCalls(mocks), mok.EmptyInfomap)
 }
 
 func WrapTestDeadline(deadline time.Time) TestFn {
-	return func(hooks mocks.Hooks[any], factory mocks.HooksFactory[any],
-		group mocks.ClientGroup,
-		cmd cmocks.Cmd,
+	return func(hooks mock.Hooks[any], factory mock.HooksFactory[any],
+		group mock.ClientGroup,
+		cmd cmock.Cmd,
 		Result core.Result,
 		wantErr error,
 		t *testing.T,
@@ -166,10 +166,10 @@ func WrapTestDeadline(deadline time.Time) TestFn {
 	}
 }
 
-func TestDeadline(hooks mocks.Hooks[any], factory mocks.HooksFactory[any],
-	group mocks.ClientGroup,
+func TestDeadline(hooks mock.Hooks[any], factory mock.HooksFactory[any],
+	group mock.ClientGroup,
 	deadline time.Time,
-	cmd cmocks.Cmd,
+	cmd cmock.Cmd,
 	Result core.Result,
 	wantErr error,
 	t *testing.T,
@@ -179,8 +179,8 @@ func TestDeadline(hooks mocks.Hooks[any], factory mocks.HooksFactory[any],
 		mocks  = []*mok.Mock{hooks.Mock, factory.Mock, group.Mock, cmd.Mock}
 	)
 	result, err := sender.SendWithDeadline(context.Background(), cmd, deadline)
-	asserterror.EqualError(err, wantErr, t)
-	asserterror.EqualDeep(result, Result, t)
+	asserterror.EqualError(t, err, wantErr)
+	asserterror.EqualDeep(t, result, Result)
 
-	asserterror.EqualDeep(mok.CheckCalls(mocks), mok.EmptyInfomap, t)
+	asserterror.EqualDeep(t, mok.CheckCalls(mocks), mok.EmptyInfomap)
 }
