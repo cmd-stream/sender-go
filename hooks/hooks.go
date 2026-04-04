@@ -1,4 +1,9 @@
+// Package hooks provides a way to customize behavior during the command sending
+// process.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
 package hooks
+
 
 import (
 	"context"
@@ -7,13 +12,18 @@ import (
 )
 
 // HooksFactory provides a way to create new Hooks instances.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 type HooksFactory[T any] interface {
 	New() Hooks[T]
 }
 
-// Hooks defines an interface for customizing behavior during the command
 // sending process. Implementations can provide hooks for events such as
 // BeforeSend, OnError, OnResult, and OnTimeout.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 type Hooks[T any] interface {
 	BeforeSend(ctx context.Context, cmd core.Cmd[T]) (context.Context, error)
 	OnError(ctx context.Context, sentCmd SentCmd[T], err error)

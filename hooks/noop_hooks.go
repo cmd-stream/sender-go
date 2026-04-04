@@ -6,7 +6,9 @@ import (
 	"github.com/cmd-stream/core-go"
 )
 
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
 type NoopHooksFactory[T any] struct {
+
 	hooks NoopHooks[T]
 }
 
@@ -14,7 +16,9 @@ func (f NoopHooksFactory[T]) New() Hooks[T] {
 	return f.hooks
 }
 
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
 type NoopHooks[T any] struct{}
+
 
 func (h NoopHooks[T]) BeforeSend(ctx context.Context, cmd core.Cmd[T]) (
 	context.Context, error,

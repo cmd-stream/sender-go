@@ -9,6 +9,9 @@ import (
 
 // ClientGroup represents a group of clients used to send commands and receive
 // results.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 type ClientGroup[T any] interface {
 	Send(cmd core.Cmd[T], results chan<- core.AsyncResult) (
 		seq core.Seq, clientID grp.ClientID, n int, err error)

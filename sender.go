@@ -1,4 +1,9 @@
+// Package sender provides a high-level abstraction over a client group for sending
+// Commands to the server.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
 package sender
+
 
 import (
 	"context"
@@ -15,6 +20,9 @@ import (
 )
 
 // Make creates a new Sender.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func Make[T any](addr string, codec cln.Codec[T],
 	ops ...SetMakeOption[T],
 ) (sender Sender[T], err error) {
@@ -45,6 +53,9 @@ func Make[T any](addr string, codec cln.Codec[T],
 }
 
 // New creates a new Sender with the given client group and optional hooks.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func New[T any](group ClientGroup[T], ops ...SetOption[T]) Sender[T] {
 	o := Options[T]{
 		HooksFactory: hks.NoopHooksFactory[T]{},
@@ -59,12 +70,18 @@ func New[T any](group ClientGroup[T], ops ...SetOption[T]) Sender[T] {
 
 // Sender provides a high-level abstraction over a client group for sending
 // Commands to the server.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 type Sender[T any] struct {
 	group   ClientGroup[T]
 	options Options[T]
 }
 
 // Send sends a Command to the server and waits (using the ctx) for the Result.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func (s Sender[T]) Send(ctx context.Context, cmd core.Cmd[T]) (
 	result core.Result, err error,
 ) {
@@ -91,6 +108,9 @@ func (s Sender[T]) Send(ctx context.Context, cmd core.Cmd[T]) (
 
 // SendWithDeadline sends a Command to the server with the specified deadline
 // and waits (using the ctx) for the Result.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func (s Sender[T]) SendWithDeadline(ctx context.Context,
 	cmd core.Cmd[T], dealine time.Time,
 ) (result core.Result, err error) {
@@ -117,6 +137,9 @@ func (s Sender[T]) SendWithDeadline(ctx context.Context,
 
 // SendMulti sends a Command to the server and waits (using the ctx) for multiple
 // Results.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func (s Sender[T]) SendMulti(ctx context.Context, cmd core.Cmd[T],
 	resultsCount int, handler ResultHandler,
 ) (err error) {
@@ -144,6 +167,9 @@ func (s Sender[T]) SendMulti(ctx context.Context, cmd core.Cmd[T],
 
 // SendMultiWithDeadline sends a Command to the server with the specified
 // deadline and waits (using the ctx) for multiple Results.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func (s Sender[T]) SendMultiWithDeadline(ctx context.Context,
 	cmd core.Cmd[T],
 	resultsCount int,
@@ -172,7 +198,11 @@ func (s Sender[T]) SendMultiWithDeadline(ctx context.Context,
 	return
 }
 
+// CloseAndWait closes the sender and waits for it to finish.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
 func (s Sender[T]) CloseAndWait(timeout time.Duration) (err error) {
+
 	err = s.Close()
 	if err != nil {
 		return
@@ -186,12 +216,18 @@ func (s Sender[T]) CloseAndWait(timeout time.Duration) (err error) {
 }
 
 // Close closes the underlying client group.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func (s Sender[T]) Close() error {
 	return s.group.Close()
 }
 
 // Done returns a channel that is closed when the underlying client group is
 // closed.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func (s Sender[T]) Done() <-chan struct{} {
 	return s.group.Done()
 }

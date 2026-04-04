@@ -6,31 +6,47 @@ import (
 	grp "github.com/cmd-stream/cmd-stream-go/group"
 )
 
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
 type MakeOptions[T any] struct {
+
 	Group        []grp.SetOption[T]
 	Sender       []SetOption[T]
 	TLSConfig    *tls.Config
 	ClientsCount int
 }
 
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
 type SetMakeOption[T any] func(o *MakeOptions[T])
 
+
 // WithGroup sets options for the client group.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func WithGroup[T any](ops ...grp.SetOption[T]) SetMakeOption[T] {
 	return func(o *MakeOptions[T]) { o.Group = ops }
 }
 
 // WithSender sets options for the sender.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func WithSender[T any](ops ...SetOption[T]) SetMakeOption[T] {
 	return func(o *MakeOptions[T]) { o.Sender = ops }
 }
 
 // WithTLSConfig sets the TLS configuration for the client group.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func WithTLSConfig[T any](conf *tls.Config) SetMakeOption[T] {
 	return func(o *MakeOptions[T]) { o.TLSConfig = conf }
 }
 
 // WithClientsCount sets the number of clients in the client group.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func WithClientsCount[T any](count int) SetMakeOption[T] {
 	return func(o *MakeOptions[T]) { o.ClientsCount = count }
 }

@@ -7,6 +7,9 @@ import (
 )
 
 // NewCircuitBreakerHooksFactory creates a new CircuitBreakerHooksFactory.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func NewCircuitBreakerHooksFactory[T any](cb CircuitBreaker,
 	factory HooksFactory[T],
 ) CircuitBreakerHooksFactory[T] {
@@ -15,6 +18,9 @@ func NewCircuitBreakerHooksFactory[T any](cb CircuitBreaker,
 
 // CircuitBreakerHooksFactory can be used to create hooks that incorporate
 // circuit breaker logic during the command sending process.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 type CircuitBreakerHooksFactory[T any] struct {
 	cb      CircuitBreaker
 	factory HooksFactory[T]
@@ -25,15 +31,20 @@ func (f CircuitBreakerHooksFactory[T]) New() Hooks[T] {
 }
 
 // NewCircuitBreakerHooks creates a new CircuitBreakerHooks.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 func NewCircuitBreakerHooks[T any](cb CircuitBreaker,
 	hooks Hooks[T],
 ) CircuitBreakerHooks[T] {
 	return CircuitBreakerHooks[T]{cb, hooks}
 }
 
-// CircuitBreakerHooks checks whether the circuit breaker allows the operation
 // before sending. If not, it returns ErrNotAllowed, otherwise the
 // corresponding method of the inner Hooks is called.
+//
+// Deprecated: use github.com/cmd-stream/cmd-stream-go instead.
+
 type CircuitBreakerHooks[T any] struct {
 	cb    CircuitBreaker
 	hooks Hooks[T]
